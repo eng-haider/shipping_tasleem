@@ -1,6 +1,0 @@
-/vendor/
-/logs/
-composer.phar
-composer.lock
-clover.xml
-*.cache
