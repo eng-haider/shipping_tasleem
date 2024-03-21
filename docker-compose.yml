@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: tasleemuser
+        uid: 100000
+      context: ./
+      dockerfile: Dockerfile
+    image: tasleem
+    container_name: tasleem-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - tasleem
+
+  db:
+    image: mysql:8.0
+    container_name: tasleem-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tasleem_db
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_PASSWORD: 123456
+      MYSQL_USER: rootuser
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - tasleem
+    ports:
+      - 3370:3306
+
+  nginx:
+    image: nginx:alpine
+    container_name: tasleem-nginx
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www
+      - ./nginx:/etc/nginx/conf.d/
+    networks:
+      - tasleem
+    ports:
+      - 3838:80
+
+networks:
+  tasleem:
+    driver: bridge
