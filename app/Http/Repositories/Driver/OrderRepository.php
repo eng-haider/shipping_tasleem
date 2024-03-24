@@ -140,6 +140,8 @@ class OrderRepository extends BaseRepository{
                 return Helper::responseError('Failed to change status CDC', [], 400);
 
             DB::commit();
+
+            
             return Helper::responseSuccess('Order created successfully', [
                 'order' => $response,
                 'history' => $createOrderHistory,

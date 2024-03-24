@@ -22,7 +22,7 @@ return new class extends Migration
             $table->uuid('status_id')->nullable();
             $table->uuid('updator_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrentOnUpdate();
+            $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
             $table->softDeletes();
             //foreign
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
