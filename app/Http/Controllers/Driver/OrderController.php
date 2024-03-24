@@ -42,6 +42,7 @@ class OrderController extends Controller
         $order = $request->validated();
         $history = $history->validated(); 
         $checkOrderExists = $this->orderRepo->showByTr($order['tr']);
+        
         if($checkOrderExists){
             if($request->hasFile('fingerprint_image')){
                 $history['fingerprint_image'] = $request->file('fingerprint_image')->store('orders-history-fingerprint');
@@ -53,6 +54,7 @@ class OrderController extends Controller
         }
         $service = new CDCIntegrateService();
         $check = $service->checkOrderTrExistsInCDC($order['tr']);
+        
         if(!$check)
             return Helper::responseError('This tr not found', [], 400);
         if($request->hasFile('image')){
@@ -62,7 +64,7 @@ class OrderController extends Controller
             $history['fingerprint_image'] = $request->file('fingerprint_image')->store('orders-history-fingerprint');
         }
         unset($order['image']);unset($order['fingerprint_image']);
-        return $this->orderRepo->createOrder($order, $history, $check);
+        return $this->orderRepo->createOrder($order, $history, $check['data']);
     }
     /**
      * created Order in storage.

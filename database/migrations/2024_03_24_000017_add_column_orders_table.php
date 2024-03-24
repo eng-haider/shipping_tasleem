@@ -14,7 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->uuid('delivery_service_provider_id')->after('status_id')->nullable();
+         
+            $table->uuid('issuance_center_id')->nullable()->after('governorate_id');
+            $table->foreign('issuance_center_id')->references('id')->on('issuance_centers')->onDelete('cascade');
         });
     }
 
@@ -25,8 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            //
-        });
+        //
     }
 };

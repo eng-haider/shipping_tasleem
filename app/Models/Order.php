@@ -91,6 +91,10 @@ class Order extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
+       public function custumers()
+    {
+        return $this->belongsToMany(Customer::class,'order_custumer');
+    }
     public function governorate()
     {
         return $this->belongsTo(Governorate::class, 'governorate_id', 'id')->select(['id', 'name']);

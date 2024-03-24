@@ -17,11 +17,11 @@ class UserSeeder extends Seeder
     public function run()
     {
         //add super admin user   
-        $superadmin = User::where('phone', '07700000000')->first();
+        $superadmin = User::where('phone', '07700281899')->first();
         if(!$superadmin){
             $superadmin = User::create([
                 'name' => 'super admin',
-                'phone' => '07700000000'
+                'phone' => '07700281899'
             ]);
             //assign super admin role to super admin user
             $superadmin->assignRole('super-admin');

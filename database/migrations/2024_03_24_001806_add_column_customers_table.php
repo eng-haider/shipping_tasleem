@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->uuid('delivery_service_provider_id')->after('status_id')->nullable();
+        Schema::table('customers', function (Blueprint $table) {
+         
+            $table->string('issuance_center_name')->nullable()->after('address');
+            $table->string('issuance_center_address')->nullable()->after('address');
+            $table->string('issuance_center_governorate')->nullable()->after('address');
+
+
         });
     }
 
@@ -25,8 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            //
-        });
+        //
     }
 };

@@ -2,6 +2,9 @@
 namespace App\Http\Repositories\Driver;
 
 use App\Models\Order;
+use App\Models\IssuanceCenter;
+
+//IssuanceCenter
 use App\Helper\Helper;
 use App\Models\Customer;
 use PHPUnit\TextUI\Help;
@@ -12,6 +15,9 @@ use Spatie\QueryBuilder\QueryBuilder;
 use App\Http\Repositories\BaseRepository;
 use App\Http\Repositories\StatusRepository;
 use App\Http\Repositories\CustomerRepository;
+use App\Http\Repositories\IssuanceCenterRepository;
+
+
 use App\Http\Repositories\OrderHistoryRepository;
 
 class OrderRepository extends BaseRepository{
@@ -24,6 +30,11 @@ class OrderRepository extends BaseRepository{
         return $this->model->where('tr', $tr)->with('status')->first();
     }
 
+
+    // public function showByUuid($uuid)
+    // {
+    //     return $this->model->where('uuid', $tr)->with('status')->first();
+    // }
     public function myOrderList($take = 10, $from = null, $to = null, $statuses = [])
     {
         $result = QueryBuilder::for($this->model)
@@ -39,32 +50,92 @@ class OrderRepository extends BaseRepository{
     }
     public function createOrder($order, $history, $check)
     {
+
+   
         $statusRepo = new StatusRepository();
         $customerRepo = new CustomerRepository();
+        $issuancecenterRepo = new IssuanceCenterRepository();
+
+        //IsuanceCenterRepository
+
         $orderHistoryRepo = new OrderHistoryRepository();
         DB::beginTransaction();
         try{
             $status = $statusRepo->getReceivedStatus();
             $order['company_id'] = auth('driver')->user()->company_id;
             $order['governorate_id'] = auth('driver')->user()->governorate_id;
-            $order['bn'] = $check['bn'];
+            // $order['bn'] = $check['bn'];
             $order['nd'] = $check['nd'];
-            $order['delivery_service_provider_id'] = $check['deliveryServiceProvider']['id'];
+            $order['delivery_service_provider_id'] = $check['company_id'];
             $order['status_id'] = $status['id'];
-            $customer['phone'] = (string) $check['phone'];
-            $customer['name'] = (string)$check['customer'];
-            $customer['address'] = (string)$check['address1'];
-            $customerModel = Customer::where('phone', $customer['phone'])->where('name', $customer['name'])->first();
-            if(!$customerModel)
-                $customerModel = $customerRepo->create($customer);
+
+
+
+
+
+
+
+
+            //store issuancecenter and customers
+
+            // $issuancecenterModel = IssuanceCenter::where('name', $check['issuancecenter']['name'])
+            // ->where('governorate', $check['issuancecenter']['governorates']['name']) ->first();
+
+        //    if(!$issuancecenterModel){
+
+        //     // $issuancecenter['phone'] = (string) $check['issuancecenter']['phone'];
+        //     $issuancecenter['name'] = (string)$check['issuancecenter']['name'];
+        //     $issuancecenter['address'] = (string)$check['issuancecenter']['address'];
+        //     $issuancecenter['governorate'] = (string)$check['issuancecenter']['governorates']['name'];
+
+        //     $issuancecenterModel = $issuancecenterRepo->create($issuancecenter);
+        //    }
+
+            // $customer['issuance_center_id']=$issuancecenterModel->id;
+            // $order['issuance_center_id']=$issuancecenterModel->id;
+
+            $custumers=[];
+            foreach($check['custumers'] as $value){
+
+                $customerModel = Customer::where('phone', $value['phone'])->where('name', $value['name'])
+                ->where('issuance_center_name', $check['issuancecenter']['name'])
+                ->first();
+                if(!$customerModel){
+                    $customer['phone'] = (string) $value['phone'];
+                    $customer['name'] = (string)$value['name'];
+                    $customer['address'] = (string)$check['issuancecenter']['address'];
+
+                    $customer['issuance_center_name'] = (string) $check['issuancecenter']['name'];
+                    $customer['issuance_center_address'] = (string)$check['issuancecenter']['address'];
+                    $customer['issuance_center_governorate'] = (string)$check['issuancecenter']['governorates']['name'];
+
+                    $customerModel = $customerRepo->create($customer);
+                 
+                }else{
+                    array_push($custumers, $customerModel->id);
+                }
+              
+            }
+            
+
+
+
+
+
+        
+
             unset($order['customer_address']);unset($order['customer_name']);unset($order['customer_phone']);
-            $order['customer_id'] = $customerModel->id;
+            // $order['customer_id'] = $customerModel->id;
             $response = $this->model->create($order);
+
+            $response->custumers()->attach($custumers);
+
             $history['order_id'] = $response['uuid'];
             $history['status_id'] = $status['id'];
             $createOrderHistory = $orderHistoryRepo->create($history);
+
             $service = new CDCIntegrateService();
-            $changeCDCOrderStatus = $service->changeCDCOrderStatus($response, $status['id'], $response['tr']);
+             $changeCDCOrderStatus = $service->changeCDCOrderStatus($response, $status['id'], $response['tr']);
             if(!$changeCDCOrderStatus)
                 return Helper::responseError('Failed to change status CDC', [], 400);
 
@@ -72,7 +143,7 @@ class OrderRepository extends BaseRepository{
             return Helper::responseSuccess('Order created successfully', [
                 'order' => $response,
                 'history' => $createOrderHistory,
-                'customer' => $customerModel
+                'customer' =>$response->custumers
             ]);
         }catch(\Exception $e){
             DB::rollBack();
